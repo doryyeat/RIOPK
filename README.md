@@ -66,8 +66,9 @@
 
 ### User-flow диаграммы
 
-Описание переходов между части ПС для всех ролей из диаграммы ВИ (название ролей должны совпадать с тем, что указано на c4-модели и диаграмме вариантов использования)
+<img width="974" height="442" alt="image" src="https://github.com/user-attachments/assets/bd31d519-ae52-40ef-bb48-ba460de9311b" />
 
+<img width="974" height="349" alt="image" src="https://github.com/user-attachments/assets/81172f5f-3c3b-46bb-8d64-a1d4e5cb4e9d" />
 
 ---
 
