@@ -54,7 +54,7 @@
 
 ### Схема данных
 
-<img width="974" height="809" alt="image" src="https://github.com/user-attachments/assets/917376d0-79a5-472f-b769-f37d11cb264e" />
+<img width="1187" height="985" alt="BD_Schema" src="https://github.com/user-attachments/assets/a423859f-dfd5-4d24-bd88-d7c6c67f1a8f" />
 
 ---
 
