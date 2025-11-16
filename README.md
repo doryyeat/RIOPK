@@ -4,14 +4,14 @@
 
 Приложение построено с акцентом на разграничение прав доступа и удобную навигацию по рабочим областям.
 
-Цели проекта:
+**Цели проекта:**
 1. Автоматизировать процесс управления подарочными сертификатами для улучшения операционной эффективности.
 2. Обеспечить прозрачность и безопасность обработки сертификатов с разграничением ролей.
 3. Создать современный и удобный в использовании интерфейс для разных категорий пользователей.
 4. Предоставить инструменты аналитики для оценки продаж и активности клиентов.
 5. Упростить процесс покупки и активации сертификатов, повысить удобство клиентов.
 
-Основные возможности:
+**Основные возможности:**
 1. Многоуровневый доступ с тремя ролями: управляющий, менеджер, клиент.
 2. Управление сертификатами.
 3. Управление пользователями.
@@ -118,7 +118,180 @@
 
 ### Безопасность
 
-Описать подходы, использованные для обеспечения безопасности, включая описание процессов аутентификации и авторизации с примерами кода из репозитория сервера
+**Регистрация пользователей через POST-запрос.** Контроллер обрабатывает POST-запрос на создание нового пользователя. Используется валидация данных через @Valid. Данные пользователя принимаются из тела запроса и передаются в сервис для сохранения. Результат преобразуется в DTO и возвращается клиенту.
+
+```@PostMapping
+public Result save(@Valid @RequestBody AppUser newUser) {
+    return new Result(
+            true,
+            StatusCode.SUCCESS,
+            "Success Save",
+            toDtoConverter.convert(service.save(newUser))
+    );
+}
+```
+
+**Обработка аутентификации в контроллере.** Контроллер принимает объект аутентификации после успешного входа. В лог записывается имя пользователя. Создаётся ответ с JWT токеном и информацией о пользователе, возвращаемый клиенту.
+
+```@RestController
+@RequiredArgsConstructor
+@RequestMapping("/users")
+public class AuthController {
+
+    private final AuthService authService;
+    private final static Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
+
+    @PostMapping("/login")
+    public Result getLoginIndo(Authentication authentication) {
+        LOGGER.debug("Authenticated user: '{}'", authentication.getName());
+        return new Result(
+                true,
+                StatusCode.SUCCESS,
+                "User Info and JSON Web Token",
+                authService.createLoginInfo(authentication)
+        );
+    }
+}
+```
+
+**Сервис формирования данных пользователя и JWT токена.** В сервисе из объекта аутентификации извлекается пользователь. Он конвертируется в DTO для передачи клиенту. Параллельно генерируется JWT токен. Итог — карта с данными пользователя и токеном.
+
+```@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final JwtProvider jwtProvider;
+    private final UserToUserDtoConverter userToUserDtoConverter;
+
+    public Map<String, Object> createLoginInfo(Authentication authentication) {
+        MyUserPrincipal principal = (MyUserPrincipal) authentication.getPrincipal();
+
+        AppUser user = principal.user();
+        UserDto userDto = userToUserDtoConverter.convert(user);
+
+        String token = jwtProvider.createToken(authentication);
+
+        Map<String, Object> loginResultMap = new HashMap<>();
+
+        loginResultMap.put("user", userDto);
+        loginResultMap.put("token", token);
+
+        return loginResultMap;
+    }
+}
+```
+
+**Генерация JWT токена с помощью RSA.** Токен создаётся с текущим временем, временем истечения, субъектом (логином) и ролями пользователя. Все эти данные подписываются приватным ключом для безопасности.
+
+```@Component
+@RequiredArgsConstructor
+public class JwtProvider {
+
+    private final JwtEncoder jwtEncoder;
+
+    public String createToken(Authentication authentication) {
+        Instant now = Instant.now();
+        long expiresIn = 2;
+
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plus(expiresIn, ChronoUnit.HOURS))
+                .subject(authentication.getName())
+                .claim("authorities", authorities)
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+}
+```
+
+**Конфигурация безопасности Spring Security.** Настраивается защита API, политика без сессий, CORS, обработчики ошибок аутентификации и авторизации. Определяются механизмы кодирования пароля и генерации/проверки JWT.
+
+```@Configuration
+@EnableMethodSecurity(securedEnabled = true)
+public class SecurityConfiguration {
+
+    public final RSAPublicKey publicKey;
+    private final RSAPrivateKey privateKey;
+    private final CustomBasicAuthenticationEntryPoint customBasicAuthenticationEntryPoint;
+    private final CustomBearerTokenAuthenticationEntryPoint customBearerTokenAuthenticationEntryPoint;
+    private final CustomBearerTokenAccessDeniedHandler customBearerTokenAccessDeniedHandler;
+
+    public SecurityConfiguration(CustomBasicAuthenticationEntryPoint customBasicAuthenticationEntryPoint,
+                                 CustomBearerTokenAuthenticationEntryPoint customBearerTokenAuthenticationEntryPoint,
+                                 CustomBearerTokenAccessDeniedHandler customBearerTokenAccessDeniedHandler) throws NoSuchAlgorithmException {
+        this.customBasicAuthenticationEntryPoint = customBasicAuthenticationEntryPoint;
+        this.customBearerTokenAuthenticationEntryPoint = customBearerTokenAuthenticationEntryPoint;
+        this.customBearerTokenAccessDeniedHandler = customBearerTokenAccessDeniedHandler;
+
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        publicKey = (RSAPublicKey) keyPair.getPublic();
+        privateKey = (RSAPrivateKey) keyPair.getPrivate();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(corsConfigurer -> corsConfigurer.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+                    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
+                    config.setAllowedHeaders(Collections.singletonList("*"));
+                    config.setExposedHeaders(Collections.singletonList("*"));
+                    config.setAllowCredentials(true);
+                    config.setMaxAge(3600L);
+                    return config;
+                }))
+                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(customBasicAuthenticationEntryPoint))
+                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer
+                        .jwt(Customizer.withDefaults())
+                        .authenticationEntryPoint(customBearerTokenAuthenticationEntryPoint)
+                        .accessDeniedHandler(customBearerTokenAccessDeniedHandler))
+                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder() {
+        JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey).build();
+        JWKSource<SecurityContext> jwkSet = new ImmutableJWKSet<>(new JWKSet(jwk));
+        return new NimbusJwtEncoder(jwkSet);
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withPublicKey(publicKey).build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+
+        return jwtAuthenticationConverter;
+    }
+}
+```
 
 ### Оценка качества кода
 
