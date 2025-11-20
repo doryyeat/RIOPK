@@ -71,9 +71,7 @@
 
 ### Схема данных
 
-<img width="1131" height="986" alt="BD_Schema" src="https://github.com/user-attachments/assets/cb4c48e9-30f2-4fb9-a4dc-960d0b04cfd9" />
-
----
+<img width="1714" height="1074" alt="db" src="https://github.com/user-attachments/assets/62fa787e-986e-45f3-8d60-8dcbc0394416" />
 
 ## **Функциональные возможности**
 
@@ -103,14 +101,30 @@
 
 
 
-
 ---
 
 ## **Детали реализации**
 
 ### UML-диаграммы
 
-Представить все UML-диаграммы , которые позволят более точно понять структуру и детали реализации ПС
+**Поведенческие UML-диаграммы**
+
+- Use Case
+<img width="1335" height="1184" alt="Use_Case drawio" src="https://github.com/user-attachments/assets/9f230009-1dcb-4a1e-bd45-d4e2cc43d7d0" />
+
+- Sequence Diagram
+<img width="1195" height="1140" alt="Sequence_Diagram" src="https://github.com/user-attachments/assets/4fa096ce-5e16-49de-98ec-daf95644c28b" />
+
+- Activity Diagram
+<img width="760" height="877" alt="Activity_Diagram" src="https://github.com/user-attachments/assets/c7f75e42-44aa-41e7-86ac-a422da789614" />
+
+**Структурные UML-диаграммы**
+
+- Components Diagram
+<img width="1491" height="2898" alt="Components_diagram" src="https://github.com/user-attachments/assets/eab1c8d1-f500-4c10-af4a-11d1c7eb4047" />
+
+- Deployment Diagram
+<img width="1579" height="655" alt="Deployment_Diagram drawio" src="https://github.com/user-attachments/assets/219856d2-42e9-487a-a601-a259128e90c7" />
 
 ### Спецификация API
 
