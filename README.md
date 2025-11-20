@@ -71,13 +71,13 @@
 
 ### Схема данных
 
-<img width="1714" height="1074" alt="db" src="https://github.com/user-attachments/assets/62fa787e-986e-45f3-8d60-8dcbc0394416" />
+<img width="1714" height="1015" alt="BD_Schema" src="https://github.com/user-attachments/assets/946bf688-6171-4d8e-aefd-98130bd3d97f" />
 
 ## **Функциональные возможности**
 
 ### Диаграмма вариантов использования
 
-Диаграмма вариантов использования и ее описание
+<img width="1335" height="1184" alt="Use_Case drawio" src="https://github.com/user-attachments/assets/0cf426f3-8033-4936-ba58-099a226901c2" />
 
 ### User-flow диаграммы
 
