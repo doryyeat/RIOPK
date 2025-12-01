@@ -1,0 +1,42 @@
+<div class="container py-5">
+
+	<h1 data-aos="fade-up">Сертификат</h1>
+
+	<div class="row mt-4" data-aos="fade-up">
+		<div class="col-auto">
+			<a appNavigate [navigateURL]="'orderings'" class="btn btn-primary">Назад</a>
+		</div>
+		<div class="col-auto">
+			<a (click)="generatePDF()" class="btn btn-primary">PDF</a>
+		</div>
+		<div *ngIf="activate" class="col-auto">
+			<a (click)="used()" class="btn btn-primary">Активировать</a>
+		</div>
+	</div>
+
+</div>
+
+<div class="container">
+
+	<div class="card card-body shadow-sm border-0 fs-4 mb-4" data-aos="fade-up">
+		<div id="pdf" class="p-3">
+			<div class="row">
+				<div class="col-12 col-lg-6">
+					<p class="m-0 text-center">{{ 'Дата начала: ' + ordering.dateStartFormat }}</p>
+				</div>
+				<div class="col-12 col-lg-6">
+					<p class="m-0 text-center">{{ 'Дата завершения: ' + ordering.dateEndFormat }}</p>
+				</div>
+			</div>
+			<hr>
+			<p class="m-0 text-center">{{ 'Код: ' + ordering.code }}</p>
+			<hr>
+			<p *ngIf="role === 'MANAGER'" class="m-0">{{ 'Купил: ' + ordering.ownerUsername }}</p>
+			<p class="m-0">{{ 'Сертификат: ' + ordering.certName }}</p>
+			<p class="m-0">{{ 'Статус: ' + ordering.statusName }}</p>
+			<p class="m-0">{{ 'Назначение: ' + ordering.typeName }}</p>
+			<p class="m-0">{{ 'Срок действия: ' + ordering.term + ' м.' }}</p>
+		</div>
+	</div>
+
+</div>
