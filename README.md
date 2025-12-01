@@ -1,5 +1,3 @@
-# **Программное средство управления подарочными сертификатами**
-
 Программное средство управления подарочными сертификатами позволяет автоматизировать процесс создания, продажи и активации подарочных сертификатов с учётом ролей: управляющий, менеджер и клиент. Система обеспечивает удобный и безопасный доступ к функционалу, отвечая требованиям современного бизнеса по контролю, учёту и аналитике.
 
 Приложение построено с акцентом на разграничение прав доступа и удобную навигацию по рабочим областям.
@@ -96,12 +94,50 @@
 
 ### Примеры экранов UI
 
+**Примеры экранов для роли "Управляющий"**
 
+- Страница "Главная"
+<img width="974" height="470" alt="image" src="https://github.com/user-attachments/assets/2cfca549-51b6-4dcc-ab7a-131c4af0d21f" />
 
+- Страница "Регистрация". Аналогичная страница у ролей "Клиент" и "Менеджер".
+<img width="974" height="465" alt="image" src="https://github.com/user-attachments/assets/cedba4d0-f296-4201-8d42-d1b348930ea8" />
 
+- Страница "Вход". Аналогичная страница у ролей "Клиент" и "Менеджер".
+<img width="974" height="465" alt="image" src="https://github.com/user-attachments/assets/ae47fa74-5235-4f3f-8bce-9554b6e2db36" />
 
+- Страница "Каталог"
+<img width="974" height="470" alt="image" src="https://github.com/user-attachments/assets/4938258d-db82-4dee-a51c-7091a8cc6455" />
 
----
+- Страница "Категории"
+<img width="974" height="470" alt="image" src="https://github.com/user-attachments/assets/bab69e3a-ed8f-4c71-b0a9-c5666b884b32" />
+
+- Страница "Пользователи"
+<img width="974" height="465" alt="image" src="https://github.com/user-attachments/assets/4580f137-bef8-4a6a-85fc-aa3502e2e80e" />
+
+- Страница "Аналитика"
+<img width="974" height="471" alt="image" src="https://github.com/user-attachments/assets/f808ac69-b997-4ecf-852f-6294834345a2" />
+
+**Примеры экранов для роли "Клиент"**
+
+- Страница "Главная"
+<img width="974" height="470" alt="image" src="https://github.com/user-attachments/assets/32eee592-c4f4-4fbf-98a2-90f882933581" />
+
+- Страница "Каталог"
+<img width="974" height="471" alt="image" src="https://github.com/user-attachments/assets/c918d4eb-81d4-45a6-ba46-c637b6685c31" />
+
+- Страница "Сертификаты"
+<img width="974" height="464" alt="image" src="https://github.com/user-attachments/assets/0a942865-22c6-4718-bdd6-9621ed9c951c" />
+
+**Примеры экранов для роли "Менеджер"**
+
+- Страница "Главная"
+<img width="974" height="472" alt="image" src="https://github.com/user-attachments/assets/4dc5a7c3-5618-46e0-ae1a-c7c6e4f80739" />
+
+- Страница "Каталог"
+<img width="974" height="470" alt="image" src="https://github.com/user-attachments/assets/a8b3acea-9a9e-4b03-bfed-1bc48287fe58" />
+
+- Страница "Сертификаты"
+<img width="974" height="467" alt="image" src="https://github.com/user-attachments/assets/31291995-1d38-4083-b92a-ec8ed543c9a4" />
 
 ## **Детали реализации**
 
