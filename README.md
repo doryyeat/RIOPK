@@ -352,21 +352,160 @@ public class SecurityConfiguration {
 
 ### Оценка качества кода
 
-- Связанность классов (Dependencies). Связанность выглядит вполне разумной: проект разбит на отдельные пакеты (app_user, category, ordering, security, system, util), нет одного «перегруженного» модуля, от которого зависит всё. Связанность можно оценить как умеренную и приемлемую для учебного/прикладного проекта; архитектура уже модульная, но при дальнейшем росте системы стоит внимательнее следить за тем, чтобы новые зависимости не превращали часть пакетов в «свалку» общих классов.
-- Дублирование кода (Locate Duplicates). Инструмент нашёл несколько дубликатов, в том числе в StatsController и других классах, но это не выглядит катастрофично: повторяются в основном типовые фрагменты обработки данных и подготовки ответов. Субъективно уровень дублирования можно оценить как средний: рефакторинг явно возможен (вынос общих фрагментов в отдельные методы/сервисы улучшит качество), но текущий объем дубликатов не критичен и не мешает пониманию проекта.
-- Статический анализ (Inspect Code). Результаты проверки показывают в основном предупреждения: неиспользуемые объявления, избыточные модификаторы, немного потенциальных багов и замечаний по конфигурации, плюс уязвимые зависимости в pom.xml. Субъективно это хороший признак: критичных ошибок и грубых нарушений не видно, большинство проблем решаются точечными правками и обновлением зависимостей. Уровень качества по этой метрике можно оценить как «выше среднего»: код уже достаточно аккуратен для учебного/пилотного проекта, а после устранения замечаний будет соответствовать уверенно «хорошему» уровню.
+**Связанность классов (Dependencies).** Связанность выглядит вполне разумной: проект разбит на отдельные пакеты (app_user, category, ordering, security, system, util), нет одного «перегруженного» модуля, от которого зависит всё. Связанность можно оценить как умеренную и приемлемую для учебного/прикладного проекта; архитектура уже модульная, но при дальнейшем росте системы стоит внимательнее следить за тем, чтобы новые зависимости не превращали часть пакетов в «свалку» общих классов.
+**Дублирование кода (Locate Duplicates).** Инструмент нашёл несколько дубликатов, в том числе в StatsController и других классах, но это не выглядит катастрофично: повторяются в основном типовые фрагменты обработки данных и подготовки ответов. Субъективно уровень дублирования можно оценить как средний: рефакторинг явно возможен (вынос общих фрагментов в отдельные методы/сервисы улучшит качество), но текущий объем дубликатов не критичен и не мешает пониманию проекта.
+**Статический анализ (Inspect Code).** Результаты проверки показывают в основном предупреждения: неиспользуемые объявления, избыточные модификаторы, немного потенциальных багов и замечаний по конфигурации, плюс уязвимые зависимости в pom.xml. Субъективно это хороший признак: критичных ошибок и грубых нарушений не видно, большинство проблем решаются точечными правками и обновлением зависимостей. Уровень качества по этой метрике можно оценить как «выше среднего»: код уже достаточно аккуратен для учебного/пилотного проекта, а после устранения замечаний будет соответствовать уверенно «хорошему» уровню.
 
 ## **Тестирование**
 
+Для проверки качества серверной части программного средства управления подарочными сертификатами использовались автоматические тесты на базе JUnit 5 и Mockito. Основной упор сделан на модульное (Unit) тестирование сервисного слоя, а также предусмотрены интеграционные сценарии для проверки работы REST‑API.
+
 ### Unit-тесты
 
-Представить код тестов для пяти методов и его пояснение
+Unit‑тесты проверяют бизнес‑логику сервисов в изоляции от внешних зависимостей (БД, веб‑слой). Репозитории подменяются моками, что позволяет контролировать их поведение и проверять, какие методы были вызваны и с какими параметрами.
+
+- Получение всех категорий
+
+```@Test
+void testFindAllSuccess() {
+    given(service.findAll()).willReturn(categories);
+
+    List<Category> findAll = service.findAll();
+
+    assertThat(findAll.size()).isEqualTo(categories.size());
+    verify(repository, times(1))
+            .findAll(Sort.by(Sort.Direction.DESC, "id"));
+}
+```
+
+Тест проверяет, что сервис возвращает полный список категорий и внутри себя корректно вызывает метод findAll репозитория с нужным сортированием.
+
+- Поиск категорий по идентфикатору (успех)
+
+``` @Test
+void testFindSuccess() {
+    Category category = categories.get(0);
+    given(repository.findById(1L)).willReturn(Optional.of(category));
+
+    Category find = service.find("1");
+
+    assertThat(find.getId()).isEqualTo(category.getId());
+    assertThat(find.getName()).isEqualTo(category.getName());
+    verify(repository, times(1)).findById(1L);
+}
+```
+
+Здесь проверяется позитивный сценарий: при наличии записи в репозитории сервис должен вернуть корректный объект и обратиться к findById ровно один раз.
+
+- Обработка существующей категории (исключение)
+
+``` @Test
+void testFindNotFound() {
+    given(repository.findById(any(Long.class))).willReturn(Optional.empty());
+
+    assertThrows(ObjectNotFoundException.class,
+            () -> service.find("1"));
+
+    verify(repository, times(1)).findById(1L);
+}
+```
+
+Тест моделирует ситуацию, когда категория с указанным идентификатором не найдена. Ожидается выброс исключения ObjectNotFoundException, что важно для корректной обработки ошибок на уровне сервиса.
+
+- Сохранение сертификата
+
+``` @Test
+void testSaveSuccess() {
+    Cert save = certs.get(0);
+    given(repository.save(save)).willReturn(save);
+
+    Cert saved = service.saveForTest(save);
+
+    assertThat(saved.getName()).isEqualTo(save.getName());
+    assertThat(saved.getAddress()).isEqualTo(save.getAddress());
+    assertThat(saved.getPrice()).isEqualTo(save.getPrice());
+    assertThat(saved.getTerm()).isEqualTo(save.getTerm());
+    assertThat(saved.getDescription()).isEqualTo(save.getDescription());
+    verify(repository, times(1)).save(save);
+}
+```
+
+Данный тест проверяет корректность сохранения новой сущности сертификата: все поля объекта, возвращаемого сервисом, должны совпадать с исходными, а репозиторий обязан быть вызван один раз.
+
+- Обновление сертификата
+
+```@Test
+void testUpdateSuccess() {
+    Cert old = certs.get(0);
+    Cert update = new Cert("update name", "update address", 9.99f, 9, "update description");
+
+    given(repository.findById(1L)).willReturn(Optional.of(old));
+    given(repository.save(old)).willReturn(old);
+
+    Cert updated = service.updateForTest(old.getId() + "", update);
+
+    assertThat(updated.getName()).isEqualTo(update.getName());
+    assertThat(updated.getAddress()).isEqualTo(update.getAddress());
+    assertThat(updated.getPrice()).isEqualTo(update.getPrice());
+    assertThat(updated.getTerm()).isEqualTo(update.getTerm());
+    assertThat(updated.getDescription()).isEqualTo(update.getDescription());
+    verify(repository, times(1)).findById(old.getId());
+    verify(repository, times(1)).save(old);
+}
+```
+
+Тест проверяет сценарий обновления существующего сертификата: сервис должен найти объект по идентификатору, изменить его поля, сохранить через репозиторий и вернуть обновлённые данные.
+
+Такой набор Unit‑тестов демонстрирует, что основные операции с категориями и сертификатами (чтение, сохранение, обновление, обработка ошибок) проверяются автоматически и ведут себя предсказуемо при различных входных данных.
 
 ### Интеграционные тесты
 
-Представить код тестов и его пояснение
+Интеграционные тесты предназначены для проверки работы REST‑эндпоинтов и взаимодействия слоёв контроллер → сервис → репозиторий. Для этого поднимается контекст Spring Boot и используется MockMvc для отправки HTTP‑запросов к API.
 
----
+- Получение списка сертификатов
+
+``` @SpringBootTest
+@AutoConfigureMockMvc
+class CertIntegrationTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Test
+    void testGetAllCerts() throws Exception {
+        mockMvc.perform(get("/api/certs"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$[0].id").exists())
+               .andExpect(jsonPath("$[0].name").isNotEmpty());
+    }
+}
+```
+
+- Создание нового сертификата
+
+``` @SpringBootTest
+@AutoConfigureMockMvc
+class CertCreateIntegrationTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Test
+    void testCreateCert() throws Exception {
+        mockMvc.perform(post("/api/certs")
+                .param("name", "New Cert")
+                .param("address", "Some address")
+                .param("price", "9.99")
+                .param("term", "12")
+                .param("description", "Test description"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.name").value("New Cert"))
+               .andExpect(jsonPath("$.price").value(9.99));
+    }
+}
+```
+
+Такое тестирование позволяет убедиться, что API правильно обрабатывает запросы, возвращает ожидаемые ответы и корректно взаимодействует с остальными слоями приложения.
 
 ## **Установка и  запуск**
 
